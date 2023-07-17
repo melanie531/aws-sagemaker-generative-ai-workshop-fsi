@@ -27,7 +27,6 @@ from langchain.chains.question_answering import load_qa_chain
 client = boto3.client('runtime.sagemaker')
 aws_region = boto3.Session().region_name
 source = []
-
 st.set_page_config(page_title="Document Analysis", page_icon=":robot:")
 
 
@@ -115,11 +114,10 @@ class ContentHandler(LLMContentHandler):
     def transform_output(self, output: bytes) -> str:
         response_json = output.read()
         res = json.loads(response_json)
-        # print(res)
-        ans = res[0]['generated_text']#[self.len_prompt:]
-        ans = ans[:ans.rfind("Human")].strip()
+        print(res)
+        ans = res[0]['generated_text']
         
-        return ans 
+        return ans[:ans.rfind("\nUser")].strip()
 
 
     
@@ -147,7 +145,8 @@ if 'generated' not in st.session_state:
 if 'past' not in st.session_state:
     st.session_state['past'] = []
     chatchain.memory.clear()
-    
+if 'rag' not in st.session_state:
+    st.session_state['rag'] = False
 if 'widget_key' not in st.session_state:
     st.session_state['widget_key'] = str(randint(1000, 100000000))
 if 'max_token' not in st.session_state:
@@ -167,10 +166,12 @@ def clear_button_fn():
     st.session_state['widget_key'] = str(randint(1000, 100000000))
     st.widget_key = str(randint(1000, 100000000))
     st.session_state.extract_audio = False
-    chatchain = load_chain(endpoint_name=endpoint_names['NLP'])
     chatchain.memory.clear()
+    # chatchain = load_chain(endpoint_name=endpoint_names['NLP'])
+    # chatchain.memory.clear()
     uploaded_file=None
     st.session_state.option = "NLP"
+
     
     
 def on_file_upload():
@@ -180,7 +181,36 @@ def on_file_upload():
     # st.session_state['widget_key'] = str(randint(1000, 100000000))
     chatchain.memory.clear()
     
+def prompt_hints(prompt_list):
+    sample_prompt = []
+    for prompt in prompt_list:
+        sample_prompt.append( f"- {str(prompt)} \n")
+    return ' '.join(sample_prompt)
         
+prompts = {
+                'rag':[
+                    "what is the recommended way to first customize a foundation model?",
+                    "how to customise foundation model to handle domain specific tasks?",
+                    "Does fine-tuning change the weights of the model?"
+                  ],
+                'audio_prompt': [
+                    "what does this file say? Summarize in one sentence",
+                    "how can digital assets facilitate customers' engagement?"
+                ],
+                'image_prompt': [
+                    "provide a caption of the image"
+                ],
+               'file_prompt': [
+                   'what does this document talk about?',
+                   'how much was the net sales?',
+                   'based on the financial results, how you do see the future growth of Amazon'
+               ],
+                'default': [
+                    "\n Based on the INPUT, answer the Question. INPUT TEXT: Canceling my banking and direct investing account to move to your competitor. You've lost a long time customer. \n\n QUESTION: what is the sentiment? \n\n OPTIONS: positive neutral negative. \n\n Helpful Answer:",
+                    "write a kind message to the customer who provided the feedback"
+                ]
+              }
+prompt_suggstion = prompt_hints(prompts['default'])
 
 with st.sidebar:
     # Sidebar - the clear button is will flush the memory of the conversation
@@ -195,21 +225,33 @@ with st.sidebar:
     if uploaded_file:
         filename = uploaded_file.name
         print(filename)
+        st.session_state.rag = False
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
             st.session_state.option = "Computer_Vision"
             image = Image.open(uploaded_file)
             st.markdown('<p style="text-align: center;">uploaded image</p>',unsafe_allow_html=True)
             st.image(image,width=300)
+            
+            prompt_suggstion = prompt_hints(prompts['image_prompt'])
         elif filename.lower().endswith(('.flac', '.wav', '.webm', 'mp3')):
             st.session_state.option = "Audio"
             byteio = BytesIO(uploaded_file.getvalue())
             data = byteio.read()
             st.audio(data, format='audio/webm')
-            
+            prompt_suggstion = prompt_hints(prompts['audio_prompt'])
         else:
             st.session_state.option = "NLP"
+            prompt_suggstion = prompt_hints(prompts['file_prompt'])
             
-    rag = st.checkbox('Use knowledge base')
+            
+    rag = st.checkbox('Use knowledge base (answer question based on the retrieved relevant information from the video data source)', key="rag")
+
+    if rag:
+        prompt_suggstion = prompt_hints(prompts['rag'])
+    st.sidebar.markdown(f'### Suggested prompts: \n\n {prompt_suggstion}')
+            
+    
+
     
 left_column, _, right_column = st.columns([50, 2, 20])
 
@@ -245,11 +287,9 @@ with left_column:
                 st.session_state['generated'].append(output)
             else:
                 st.session_state.option = "NLP"
-                if rag:
-                    # output = index.query(question=user_input, llm=llm)
+                if rag:                    
                     docs = docsearch.similarity_search_with_score(user_input)
                     contexts = []
-
                     for doc, score in docs:
                         print(f"Content: {doc.page_content}, Metadata: {doc.metadata}, Score: {score}")
                         if score <= 0.8:
@@ -278,7 +318,7 @@ with left_column:
                 st.session_state['generated'].append(output)
                 content = "=== BEGIN AUDIO FILE ===\n"
                 content += output
-                content += "\n=== END AUDIO FILE ===\nPlease remember the audio file by saying 'Yes, I remembered the audio file'"
+                content += "\n=== END AUDIO FILE ===\nPlease remember the audio file"
                 output = chatchain(content)["response"]
                 print(output)
                 st.session_state.extract_audio = False
@@ -286,7 +326,7 @@ with left_column:
                 stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
                 content = "=== BEGIN FILE ===\n"
                 content += stringio.read().strip()
-                content += "\n=== END FILE ===\nPlease confirm that you have read that file by saying 'Yes, I have read the file'"
+                content += "\n=== END FILE ===\n\n Instruction: Please confirm that you have read that file by saying: 'Yes, I have read the file'"
                 output = chatchain(content)["response"]
                 st.session_state['past'].append("I have uploaded a file. Please confirm that you have read that file.")
                 st.session_state['generated'].append(output)
