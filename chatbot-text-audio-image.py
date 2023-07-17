@@ -190,7 +190,7 @@ def prompt_hints(prompt_list):
 prompts = {
                 'rag':[
                     "what is the recommended way to first customize a foundation model?",
-                    "how to customise foundation model to handle domain specific tasks?",
+                    "if prompt engineering is not able to handle specific task, what approach can you use to handle domain-specific tasks?",
                     "Does fine-tuning change the weights of the model?"
                   ],
                 'audio_prompt': [
@@ -296,7 +296,7 @@ with left_column:
                             contexts.append(doc)
                             source.append(doc.metadata['source'])
                     print(f"\n INPUT CONTEXT:{contexts}")
-                    prompt_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.:\n\n{context}\n\nQuestion: {question}\nHelpful Answer:"""
+                    prompt_template = """Use the following pieces of Context to answer the Question at the end. If you don't know the answer, just say you don't know, don't try to make up an answer. Context:\n\n{context}\n\nQuestion: {question}\nHelpful Answer:"""
 
                     PROMPT = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
                     chain = load_qa_chain(llm=llm, prompt=PROMPT)
