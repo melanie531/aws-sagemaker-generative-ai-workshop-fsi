@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional
 import json
 from io import StringIO, BytesIO
 from random import randint
-from transformers import AutoTokenizer
 from PIL import Image
 import boto3
 import numpy as np
@@ -96,6 +95,53 @@ def generate_index():
     return docsearch
 
 docsearch = generate_index()
+
+
+
+################# sanity check for rag solution ########################
+
+def create_sanity_prompt(
+    instruction_start: str = None,
+    instruction_end: str = None,
+) -> PromptTemplate:
+    """
+    Create a prompt template for LLM sanity check
+
+    Parameters
+    ----------
+    instruction_start : str, optional
+        Instrcution in the beginning of the prompt, by default None
+    instruction_end : str, optional
+        Instrcution in the end of the prompt, by default None
+
+    Returns
+    -------
+    PromptTemplate
+        Prompt template in the LangChain format
+    """
+
+    # first instruction
+    prompt_template = instruction_start + "\n"
+
+    # add context
+    prompt_template += "Context: {context}" + "\n"
+
+    # add statement
+    prompt_template += "Statement: {statement}" + "\n"
+
+    # addinstruction
+    prompt_template += "Question: " + instruction_end + "\n"
+
+    # add answer placeholder
+    prompt_template += "Answer:"
+
+    # build the template
+    llm_prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "statement"],
+    )
+    return llm_prompt
+
 
 
 ################# Prepare for chatbot with memory #######################
@@ -191,14 +237,18 @@ prompts = {
                 'rag':[
                     "what is the recommended way to first customize a foundation model?",
                     "if prompt engineering is not able to handle specific task, what approach can you use to handle domain-specific tasks?",
-                    "Does fine-tuning change the weights of the model?"
+                    "Does fine-tuning change the weights of the model?",
+                    "Which country has the largest population in the world?",
+                    "how can digital assets facilitate customers' engagement?"
                   ],
                 'audio_prompt': [
                     "what does this file say? Summarize in one sentence",
                     "how can digital assets facilitate customers' engagement?"
                 ],
                 'image_prompt': [
-                    "provide a caption of the image"
+                    "provide a caption of the image",
+                    "how many cars do you see in the image?",
+                    "did you see any people getting injured in the image?"
                 ],
                'file_prompt': [
                    'what does this document talk about?',
@@ -302,6 +352,16 @@ with left_column:
                     chain = load_qa_chain(llm=llm, prompt=PROMPT)
                     output = chain({"input_documents": contexts, "question": user_input},
                                    return_only_outputs=True)["output_text"]
+                    # create sanity check prompt
+                    sanity_prompt = create_sanity_prompt(
+                        instruction_start="""The following is a conversation between a highly knowledgeable and intelligent AI assistant, called Falcon, and a human user asking Questions. In the following interactions, Falcon will converse in natural language, and Falcon will answer the questions based only on the provided Context. Falcon will provide accurate, short and direct answers to the questions.""",
+                        instruction_end="Is the above statement based directly on the provided context? Answer with yes or no.",
+                    )
+                    sanity_chain = load_qa_chain(llm=llm, prompt=sanity_prompt)
+                    sanity_check = sanity_chain({"input_documents": contexts, "statement": output},
+                                   return_only_outputs=True)['output_text']
+                    if sanity_check[0] == 'N':
+                        output = "Sorry. There is not enough information in the knowledge base for me to answer this question. Please try to ask another queston."
                 else:
                     output = chatchain(user_input)["response"]
                 print(output)
