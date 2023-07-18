@@ -27,9 +27,9 @@ model_parameters = {
     "max_new_tokens": 200, 
     "temperature":0.1, 
     "seed":0, 
-    "stop": ["Human:"], 
     "num_beams":1, 
-    "return_full_text": False
+    "return_full_text": False,
+    "repetition_penalty": 1.9
     }
 
 def build_chain():
