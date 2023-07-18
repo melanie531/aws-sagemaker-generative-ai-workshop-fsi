@@ -38,12 +38,11 @@ export AWS_REGION="us-east-1"
 
 # the cloudformation stack name
 export STACK_NAME=sagemaker-llm-kendra-rag-stack
-
 ```
 
 * Create CloudFormation stack
 
-Before execute below, please ensure to attach IAM AWS Managed Policies (AWSCloudFormationFullAccess, IAMFullAccess & AmazonKendraFullAccess) to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
+Before execute below, please ensure to attach IAM AWS Managed Policies (AWSCloudFormationFullAccess, IAMFullAccess, AWSLambda_FullAccess & AmazonKendraFullAccess) to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
 
 > The cloudformation stack creation may take up to 45mins - 60mins. 
 
@@ -84,10 +83,10 @@ KENDRA_DOC_S3_DS_ID=$(aws cloudformation describe-stacks \
     --region $AWS_REGION --query 'Stacks[0].Outputs[?OutputKey==`KendraDocsS3DSID`].OutputValue' --output text)
 echo "Kendra Doc S3 Data Source ID: ${KENDRA_DOC_S3_DS_ID}"
 
-KENDRA_DOC_S3_BUCKET=$(aws cloudformation describe-stacks \
+export KENDRA_DOC_S3_BUCKET=$(aws cloudformation describe-stacks \
     --stack-name $STACK_NAME \
     --region $AWS_REGION --query 'Stacks[0].Outputs[?OutputKey==`KendraDocsS3BucketName`].OutputValue' --output text)
-echo "Kendra Doc S3 Bucket Name: ${KENDRA_DOC_S3_DS_ID}"
+echo "Kendra Doc S3 Bucket Name: ${KENDRA_DOC_S3_BUCKET}"
 ```
 
 * Kick off the data source sync job.
