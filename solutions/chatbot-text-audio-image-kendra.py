@@ -4,6 +4,8 @@ from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain.llms.sagemaker_endpoint import LLMContentHandler, SagemakerEndpoint
 from langchain.embeddings.sagemaker_endpoint import EmbeddingsContentHandler
+from langchain.retrievers import AmazonKendraRetriever
+from langchain.chains import ConversationalRetrievalChain
 from typing import Any, Dict, List, Optional
 import json
 from io import StringIO, BytesIO
@@ -26,6 +28,7 @@ from langchain.chains.question_answering import load_qa_chain
 client = boto3.client('runtime.sagemaker')
 aws_region = boto3.Session().region_name
 source = []
+kendra_index_id = os.getenv("kendra_id", default="0aea2dc6-f756-47d1-a3e6-585061a7f953")
 st.set_page_config(page_title="Document Analysis", page_icon=":robot:")
 
 
@@ -96,51 +99,6 @@ def generate_index():
 
 docsearch = generate_index()
 
-
-
-################# sanity check for rag solution ########################
-
-def create_sanity_prompt(
-    instruction_start: str = None,
-    instruction_end: str = None,
-) -> PromptTemplate:
-    """
-    Create a prompt template for LLM sanity check
-
-    Parameters
-    ----------
-    instruction_start : str, optional
-        Instrcution in the beginning of the prompt, by default None
-    instruction_end : str, optional
-        Instrcution in the end of the prompt, by default None
-
-    Returns
-    -------
-    PromptTemplate
-        Prompt template in the LangChain format
-    """
-
-    # first instruction
-    prompt_template = instruction_start + "\n"
-
-    # add context
-    prompt_template += "Context: {context}" + "\n"
-
-    # add statement
-    prompt_template += "Statement: {statement}" + "\n"
-
-    # addinstruction
-    prompt_template += "Question: " + instruction_end + "\n"
-
-    # add answer placeholder
-    prompt_template += "Answer:"
-
-    # build the template
-    llm_prompt = PromptTemplate(
-        template=prompt_template,
-        input_variables=["context", "statement"],
-    )
-    return llm_prompt
 
 
 
@@ -235,11 +193,11 @@ def prompt_hints(prompt_list):
         
 prompts = {
                 'rag':[
+                    "Can SageMaker Asynchronous endpoint scale down to zero?",
+                    "What is Amazon SageMaker Saving Plan?",
                     "what is the recommended way to first customize a foundation model?",
                     "if prompt engineering is not able to handle specific task, what approach can you use to handle domain-specific tasks?",
-                    "Does fine-tuning change the weights of the model?",
-                    "Which country has the largest population in the world?",
-                    "how can digital assets facilitate customers' engagement?"
+                    "how can Amazon SageMaker help with Machine Learning?",
                   ],
                 'audio_prompt': [
                     "what does this file say? Summarize in one sentence",
@@ -298,6 +256,7 @@ with st.sidebar:
 
     if rag:
         prompt_suggstion = prompt_hints(prompts['rag'])
+        retriever = AmazonKendraRetriever(index_id=kendra_index_id)
     st.sidebar.markdown(f'### Suggested prompts: \n\n {prompt_suggstion}')
             
     
@@ -338,30 +297,34 @@ with left_column:
             else:
                 st.session_state.option = "NLP"
                 if rag:                    
-                    docs = docsearch.similarity_search_with_score(user_input)
-                    contexts = []
-                    for doc, score in docs:
-                        print(f"Content: {doc.page_content}, Metadata: {doc.metadata}, Score: {score}")
-                        if score <= 0.8:
-                            contexts.append(doc)
-                            source.append(doc.metadata['source'])
-                    print(f"\n INPUT CONTEXT:{contexts}")
+                    # docs = docsearch.similarity_search_with_score(user_input)
+                    # contexts = []
+                    # for doc, score in docs:
+                    #     print(f"Content: {doc.page_content}, Metadata: {doc.metadata}, Score: {score}")
+                    #     if score <= 0.8:
+                    #         contexts.append(doc)
+                    #         source.append(doc.metadata['source'])
+                    # print(f"\n INPUT CONTEXT:{contexts}")
+                    
                     prompt_template = """Use the following pieces of Context to answer the Question at the end. If you don't know the answer, just say you don't know, don't try to make up an answer. Context:\n\n{context}\n\nQuestion: {question}\nHelpful Answer:"""
-
-                    PROMPT = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
-                    chain = load_qa_chain(llm=llm, prompt=PROMPT)
-                    output = chain({"input_documents": contexts, "question": user_input},
-                                   return_only_outputs=True)["output_text"]
-                    # create sanity check prompt
-                    sanity_prompt = create_sanity_prompt(
-                        instruction_start="""The following is a conversation between a highly knowledgeable and intelligent AI assistant, called Falcon, and a human user asking Questions. In the following interactions, Falcon will converse in natural language, and Falcon will answer the questions based only on the provided Context. Falcon will provide accurate, short and direct answers to the questions.""",
-                        instruction_end="Is the above statement based directly on the provided context? Answer with yes or no.",
+                    PROMPT = PromptTemplate(
+                          template=prompt_template, input_variables=["context", "question"]
+                      )
+                    chat_history = []
+                    qa_chain = ConversationalRetrievalChain.from_llm(
+                        llm=llm, 
+                        retriever=retriever, 
+                        # condense_question_prompt=standalone_question_prompt, 
+                        return_source_documents=True, 
+                        combine_docs_chain_kwargs={"prompt":PROMPT}
                     )
-                    sanity_chain = load_qa_chain(llm=llm, prompt=sanity_prompt)
-                    sanity_check = sanity_chain({"input_documents": contexts, "statement": output},
-                                   return_only_outputs=True)['output_text']
-                    if sanity_check[0] == 'N':
-                        output = "Sorry. There is not enough information in the knowledge base for me to answer this question. Please try to ask another queston."
+                    response = qa_chain({"question": user_input, "chat_history": chat_history})
+                    output = response['answer']
+                    source_docs = response['source_documents']
+                    print(source_docs)
+                    for doc in source_docs:
+                        source.append(doc.metadata['source'])
+                    
                 else:
                     output = chatchain(user_input)["response"]
                 print(output)

@@ -27,9 +27,9 @@ model_parameters = {
     "max_new_tokens": 200, 
     "temperature":0.1, 
     "seed":0, 
-    "stop": ["Human:"], 
     "num_beams":1, 
-    "return_full_text": False
+    "return_full_text": False,
+    "repetition_penalty": 1.9
     }
 
 def build_chain():
@@ -113,10 +113,7 @@ if __name__ == "__main__":
         if (query.strip().lower().startswith("new search:")):
             query = query.strip().lower().replace("new search:", "")
             chat_history = []
-        elif (len(chat_history) == MAX_HISTORY_LENGTH):
-            chat_history.pop(0)
         result = run_chain(qa, query, chat_history)
-        chat_history.append((query, result["answer"]))
         print(bcolors.OKGREEN + result['answer'] + bcolors.ENDC)
         if 'source_documents' in result:
             print(bcolors.OKGREEN + 'Sources:')
