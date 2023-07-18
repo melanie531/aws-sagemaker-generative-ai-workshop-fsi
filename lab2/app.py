@@ -2,41 +2,29 @@ import streamlit as st
 import uuid
 import sys
 
-import kendra_chat_flan_xl as flanxl
-import kendra_chat_flan_xxl as flanxxl
+import kendra_chat_llm as falcon7b_instruct
 
 
 USER_ICON = "images/user-icon.png"
 AI_ICON = "images/ai-icon.png"
+
 MAX_HISTORY_LENGTH = 5
 PROVIDER_MAP = {
     'flanxl': 'Flan XL',
-    'flanxxl': 'Flan XXL',
+    'falcon7b_instruct': 'Falcon 7B Instruct',
 }
 
 # Check if the user ID is already stored in the session state
 if 'user_id' in st.session_state:
     user_id = st.session_state['user_id']
-
-# If the user ID is not yet stored in the session state, generate a random UUID
 else:
     user_id = str(uuid.uuid4())
     st.session_state['user_id'] = user_id
 
 
 if 'llm_chain' not in st.session_state:
-    if (len(sys.argv) > 1):
-        print(f"arg: {sys.argv[1]}")
-        if (sys.argv[1] == 'flanxl'):
-            st.session_state['llm_app'] = flanxl
-            st.session_state['llm_chain'] = flanxl.build_chain()
-        elif (sys.argv[1] == 'flanxxl'):
-            st.session_state['llm_app'] = flanxxl
-            st.session_state['llm_chain'] = flanxxl.build_chain()
-        else:
-            raise Exception("Unsupported LLM: ", sys.argv[1])
-    else:
-        raise Exception("Usage: streamlit run app.py <flanxl|flanxxl>")
+    st.session_state['llm_app'] = falcon7b_instruct
+    st.session_state['llm_chain'] = falcon7b_instruct.build_chain()
 
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
@@ -58,7 +46,6 @@ if "answers" not in st.session_state:
 
 if "input" not in st.session_state:
     st.session_state.input = ""
-
 
 st.markdown("""
         <style>
@@ -89,7 +76,7 @@ def write_top_bar():
     with col1:
         st.image(AI_ICON, use_column_width='always')
     with col2:
-        selected_provider = sys.argv[1]
+        selected_provider = "falcon7b_instruct" # using falcon 7b instruct by default.
         if selected_provider in PROVIDER_MAP:
             provider = PROVIDER_MAP[selected_provider]
         else:

@@ -29,10 +29,11 @@ pip install -r requirement
 
 export AWS_REGION="us-east-1"
 export KENDRA_INDEX_ID="fa587068-4db8-4660-bd56-ea7397672c13"
-export FALCON_40B_INSTRUCT_ENDPOINT="falcon-40b-instruct-12xl"
+export SAGEMAKER_LLM_ENDPOINT="falcon-7b-instruct-2xl"
 
 python kendra_retriever_falcon_40b_instruct.py
 ```
 
 
 
+[Personal Loan - Terms and Conditions](https://www.commbank.com.au/content/dam/commbank/personal/apply-online/download-printed-forms/ADB2911.pdf)
