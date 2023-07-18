@@ -43,12 +43,15 @@ export STACK_NAME=sagemaker-llm-kendra-rag-stack
 
 * Create CloudFormation stack
 
-> The cloudformation stack creation may take up to 45mins - 60mins.
+Before execute below, please ensure to attach IAM AWS Managed Policies (AWSCloudFormationFullAccess, IAMFullAccess & AmazonKendraFullAccess) to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
+
+> The cloudformation stack creation may take up to 45mins - 60mins. 
 
 ```shell
-aws cloudformation create-stack \n
-    --stack-name $STACK_NAME
-    --template-body file://kendra-docs-index.yaml
+aws cloudformation create-stack \
+    --stack-name $STACK_NAME \
+    --template-body file://kendra-docs-index.yaml \
+    --capabilities CAPABILITY_NAMED_IAM
 ```
 
 ### Step 2. Deploy Falcon 7B Instruct Model
