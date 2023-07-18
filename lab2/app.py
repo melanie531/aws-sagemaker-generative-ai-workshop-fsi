@@ -2,18 +2,14 @@ import streamlit as st
 import uuid
 import sys
 
-import kendra_chat_anthropic as anthropic
 import kendra_chat_flan_xl as flanxl
 import kendra_chat_flan_xxl as flanxxl
-import kendra_chat_open_ai as openai
 
 
 USER_ICON = "images/user-icon.png"
 AI_ICON = "images/ai-icon.png"
 MAX_HISTORY_LENGTH = 5
 PROVIDER_MAP = {
-    'openai': 'Open AI',
-    'anthropic': 'Anthropic',
     'flanxl': 'Flan XL',
     'flanxxl': 'Flan XXL',
 }
@@ -31,22 +27,16 @@ else:
 if 'llm_chain' not in st.session_state:
     if (len(sys.argv) > 1):
         print(f"arg: {sys.argv[1]}")
-        if (sys.argv[1] == 'anthropic'):
-            st.session_state['llm_app'] = anthropic
-            st.session_state['llm_chain'] = anthropic.build_chain()
-        elif (sys.argv[1] == 'flanxl'):
+        if (sys.argv[1] == 'flanxl'):
             st.session_state['llm_app'] = flanxl
             st.session_state['llm_chain'] = flanxl.build_chain()
         elif (sys.argv[1] == 'flanxxl'):
             st.session_state['llm_app'] = flanxxl
             st.session_state['llm_chain'] = flanxxl.build_chain()
-        elif (sys.argv[1] == 'openai'):
-            st.session_state['llm_app'] = openai
-            st.session_state['llm_chain'] = openai.build_chain()
         else:
             raise Exception("Unsupported LLM: ", sys.argv[1])
     else:
-        raise Exception("Usage: streamlit run app.py <anthropic|flanxl|flanxxl|openai>")
+        raise Exception("Usage: streamlit run app.py <flanxl|flanxxl>")
 
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []

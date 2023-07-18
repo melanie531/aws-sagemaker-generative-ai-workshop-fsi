@@ -1,8 +1,8 @@
-# Amazon Kendra RAG with Falcon 40B Instruct Foundation Model
+# Amazon Kendra RAG with Flan XL Foundation Model
 
 **The example is based on github repo of AWS Blog - [Quickly build high-accuracy Generative AI applications on enterprise data using Amazon Kendra, LangChain, and large language models](https://aws.amazon.com/blogs/machine-learning/quickly-build-high-accuracy-generative-ai-applications-on-enterprise-data-using-amazon-kendra-langchain-and-large-language-models/)**
 
-The purpose of the document is to provide guidance on demonstrating Amazon Kendra RAG integration with Falcon 40B Instruct foundation model from HuggingFace using Amazon SageMaker.
+The purpose of the document is to provide guidance on demonstrating Amazon Kendra RAG integration with Flan XL foundation model offered by Amazon SageMaker Jumpstart.
 
 ## Deployment Process
 
