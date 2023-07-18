@@ -113,10 +113,7 @@ if __name__ == "__main__":
         if (query.strip().lower().startswith("new search:")):
             query = query.strip().lower().replace("new search:", "")
             chat_history = []
-        elif (len(chat_history) == MAX_HISTORY_LENGTH):
-            chat_history.pop(0)
         result = run_chain(qa, query, chat_history)
-        chat_history.append((query, result["answer"]))
         print(bcolors.OKGREEN + result['answer'] + bcolors.ENDC)
         if 'source_documents' in result:
             print(bcolors.OKGREEN + 'Sources:')
