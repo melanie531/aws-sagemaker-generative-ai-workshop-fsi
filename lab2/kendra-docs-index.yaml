@@ -93,6 +93,9 @@ Resources:
                 Action:
                   - 'kendra:BatchPutDocument'
                   - 'kendra:BatchDeleteDocument'
+              - Effect: Allow
+                Resource: !GetAtt 'KendraDocsS3Bucket.Arn'
+                Action: 's3:*'
           PolicyName: !Join
             - ''
             - - !Ref 'AWS::StackName'
@@ -102,6 +105,25 @@ Resources:
         - - !Ref 'AWS::StackName'
           - '-DocsDSRole'
   
+  KendraDocsS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub
+                  - 'sagemaker-llm-kendra-rag-${region}-${account}'
+                  - region: !Ref 'AWS::Region'
+                    account: !Ref 'AWS::AccountId'
+
+  KendraDocsS3BucketDS:
+    Type: 'AWS::Kendra::DataSource'
+    Properties: 
+      DataSourceConfiguration: 
+        S3Configuration:
+          BucketName: !Ref 'KendraDocsS3Bucket'
+      IndexId: !GetAtt DocsKendraIndex.Id
+      Name: 'KendraDocsS3BucketDS'
+      RoleArn: !GetAtt KendraDSRole.Arn
+      Type: 'S3'
+
   #Docs Data Source
   KendraDocsDS:
     Type: 'AWS::Kendra::DataSource'
@@ -208,3 +230,7 @@ Outputs:
     Value: !GetAtt DocsKendraIndex.Id
   AWSRegion:
     Value: !Ref 'AWS::Region'
+  KendraDocsS3BucketName:
+    Value: !Ref 'KendraDocsS3Bucket'
+  KendraDocsS3DSID:
+    Value: !GetAtt KendraDocsDS.Id

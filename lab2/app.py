@@ -1,6 +1,8 @@
 import streamlit as st
 import uuid
-import sys
+import boto3
+import os
+import time
 
 import kendra_chat_llm as falcon7b_instruct
 
@@ -13,6 +15,8 @@ PROVIDER_MAP = {
     'flanxl': 'Flan XL',
     'falcon7b_instruct': 'Falcon 7B Instruct',
 }
+region = os.environ["AWS_REGION"]
+document_bucket_name = os.environ['KENDRA_DOC_S3_BUCKET']
 
 # Check if the user ID is already stored in the session state
 if 'user_id' in st.session_state:
@@ -166,12 +170,39 @@ def write_chat_message(md, q):
     with chat:
         render_answer(md['answer'])
         render_sources(md['sources'])
+
+
+def upload_file(file, bucket, object_name):
+    s3 = boto3.client('s3', region_name=region)
     
-        
+    try:
+        s3.upload_fileobj(file, bucket, object_name)
+        st.success('File Successfully Uploaded')
+        return True
+    except FileNotFoundError as e:
+        time.sleep(9)
+        st.error('File not found.', e)
+        return False     
+       
 with st.container():
-  for (q, a) in zip(st.session_state.questions, st.session_state.answers):
-    write_user_message(q)
-    write_chat_message(a, q)
+    for (q, a) in zip(st.session_state.questions, st.session_state.answers):
+        write_user_message(q)
+        write_chat_message(a, q)
+
+with st.sidebar:
+    # Sidebar - the clear button is will flush the memory of the conversation
+    st.sidebar.title("Kendra Index Setup")
+    st.sidebar.subheader("Upload Document")
+    uploaded_file = st.sidebar.file_uploader("Select TXT/PDF/Doc... File")
+    
+    if uploaded_file is not None:
+        st.sidebar.success(uploaded_file.name + ' Selected')
+        bytes_data = uploaded_file.getvalue()
+        if st.sidebar.button('Upload'):
+            with st.spinner('Uploading...'):
+                print(uploaded_file)
+                upload_file(uploaded_file, document_bucket_name, uploaded_file.name)
+
 
 st.markdown('---')
 input = st.text_input("You are talking to an AI, ask any question.", key="input", on_change=handle_input)
