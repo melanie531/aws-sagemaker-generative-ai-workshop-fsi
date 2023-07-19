@@ -256,7 +256,7 @@ prompts = {
                    'based on the financial results, how you do see the future growth of Amazon'
                ],
                 'default': [
-                    "\n Based on the INPUT, answer the Question. INPUT TEXT: Canceling my banking and direct investing account to move to your competitor. You've lost a long time customer. \n\n QUESTION: what is the sentiment? \n\n OPTIONS: positive neutral negative. \n\n Helpful Answer:",
+                    "\n Based on the Input Text, answer the Question. Input Text: Canceling my banking and direct investing account to move to your competitor. You've lost a long time customer. \n\n Question: what is the sentiment of the input text? \n\n Options: positive neutral negative. \n\n Answer:",
                     "write a kind message to the customer who provided the feedback"
                 ]
               }
