@@ -25,7 +25,7 @@ The the lab, we choose [Falcon 7B Instruct](https://huggingface.co/tiiuae/falcon
 
 ### Prerequisites - Setting up IAM policies
 
-Before execute below, please ensure to attach IAM AWS Managed Policies `AmazonKendraFullAccess` to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
+Before execute below, please ensure to attach IAM AWS Managed Policies (`AmazonKendraFullAccess`, `IAMFullAccess`) to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
 
 You can follow the below instructions to add the policy to the IAM role. From the SageMaker console, search for IAM. 
 ![diagram](./images/searchIAM.png)
@@ -38,6 +38,8 @@ Then click into the role and select add policies from the right handside drop do
 
 Search for `Kendra` and add the `AmazonKendraFullAccess` policy to the IAM role and click **Add permissions**.
 ![diagram](./images/kendraaccess.png)
+
+Repeat the above steps to get the `IAMFullAccess` policy added to this role as well.
 
 Now we are all set. Please move back to the Studio console to continue the following sections.
 
