@@ -28,7 +28,7 @@ from langchain.chains.question_answering import load_qa_chain
 client = boto3.client('runtime.sagemaker')
 aws_region = boto3.Session().region_name
 source = []
-kendra_index_id = os.getenv("kendra_id", default="0aea2dc6-f756-47d1-a3e6-585061a7f953")
+kendra_index_id = os.getenv("KENDRA_INDEX_ID", default="2d3b8bbd-40ae-4c47-9fc0-998d6e91de3b")
 st.set_page_config(page_title="Document Analysis", page_icon=":robot:")
 
 
@@ -111,7 +111,7 @@ class ContentHandler(LLMContentHandler):
 
     def transform_input(self, prompt: str, model_kwargs: Dict={}) -> bytes:
         self.len_prompt = len(prompt)
-        input_str = json.dumps({"inputs": prompt, "parameters":{"max_new_tokens": st.session_state.max_token, "temperature":st.session_state.temperature, "seed":st.session_state.seed, "stop": ["Human:"], "num_beams":1, "return_full_text": False, "repetition_penalty": 1.9}})
+        input_str = json.dumps({"inputs": prompt, "parameters":{"max_new_tokens": st.session_state.max_token, "temperature":st.session_state.temperature, "seed":st.session_state.seed, "stop": ["Human:"], "num_beams":1, "return_full_text": False, "repetition_penalty": 2.1}})
         print(input_str)
         return input_str.encode('utf-8')
 

@@ -84,16 +84,10 @@ Please note down the Real-time endpoint name and setup below environment variabl
 export SAGEMAKER_LLM_ENDPOINT="falcon-7b-instruct-2xl"
 ```
 
-## Verifying new data source
-
-To test Amazon Kendra RAG integration with LLM on new documents, please choose documents (PDF/TXT/Doc...) and upload to the S3 bucket. e.g. PDF files from [Important information - personal documents](https://www.commbank.com.au/important-info/personal.html#pii-personal-lending). 
-
-For uploading file(s), please use the upload button in the chat streamlit app, and then execute below steps to kick off the sync-job:
-
 * Collect the resource name and ID
 
 ```shell
-KENDRA_INDEX_ID=$(aws cloudformation describe-stacks \
+export KENDRA_INDEX_ID=$(aws cloudformation describe-stacks \
     --stack-name $STACK_NAME \
     --region $AWS_REGION --query 'Stacks[0].Outputs[?OutputKey==`KendraIndexID`].OutputValue' --output text)
 echo "Kendra Index ID: ${KENDRA_INDEX_ID}"
@@ -109,17 +103,53 @@ export KENDRA_DOC_S3_BUCKET=$(aws cloudformation describe-stacks \
 echo "Kendra Doc S3 Bucket Name: ${KENDRA_DOC_S3_BUCKET}"
 ```
 
-* Kick off the data source sync job.
+Follow the notebook `lab2-RAG-solution-with-Kendra-and-Langchain.ipynb` to finish the testing of the Kendra RAG solution.
 
-> It may take 5-10mins minutes to complte the data source sync job for
+### Test the chatbot with Kendra as the RAG resource
 
-```shell
-SYNC_JOB_EXECUTION_ID=$(aws kendra start-data-source-sync-job \
-    --id $KENDRA_DOC_S3_DS_ID \
-    --index-id $KENDRA_INDEX_ID \
-    --region $AWS_REGION \
-    --query 'ExecutionId' --output text)
-echo $SYNC_JOB_EXECUTION_ID
+Now we can test the streamlit app with Kandra as the information retrieval source. 
+
+
+```
+# making sure you are at the root folder of the git repo
+cd .. 
+streamlit run solutions/chatbot-text-audio-image-kendra.py --server.port 6006 --server.maxUploadSize 6
+
 ```
 
+
+
+## Verifying new data source (Optional)
+
+To test Amazon Kendra RAG integration with LLM on new documents, please choose documents (PDF/TXT/Doc...) and upload to the S3 bucket. e.g. PDF files from [Fiancial Services Guide](https://www.commbank.com.au/content/dam/commbank/personal/apply-online/download-printed-forms/FSRA0074_BR173_PrintVersion_1811.pdf). An example pdf file is already downloaded and available in the `test` folder.
+
+
+For uploading file(s), please use below command in the terminal:
+```
+aws s3 cp test/financial-service-guide.pdf s3://${KENDRA_DOC_S3_BUCKET}/
+```
+You can go to S3 console to validate the file has been uploaded successfully. 
+
+* Kick off the data source sync job.
+
+Now let's move to the Kendra console to kick start the data source sync job.
+
+1. From the AWS console top search bar, search for `Kendra`:
+![diagram](./images/kendra.png)
+
+2. Select the **Data sources** and choose the **KendraDocsS3BucketDS**:
+![diagram](./images/kendras3source.png)
+
+3. Select **Sync now**:
+![diagram](./images/sync.png)
+
+4. Wait until the sync is completed.
+![diagram](./images/synccomplete.png)
+
 ***Once the sync up job finishes, please go back to chat streamlit app and start asking relevant questions on the new documents.***
+
+Example prompts:
+- how are the staff paid for providing financial services?
+- what are the financial product advice your representatives may provide?
+- what are the means you accept special instructions from your customers about financial products and services?
+- what product groups you are authorised to provide financial product advice on?
