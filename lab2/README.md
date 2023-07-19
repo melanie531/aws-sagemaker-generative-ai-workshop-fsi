@@ -152,4 +152,4 @@ Example prompts:
 - how are the staff paid for providing financial services?
 - what are the financial product advice your representatives may provide?
 - what are the means you accept special instructions from your customers about financial products and services?
-- what product groups you are authorised to provide financial product advice on?
+- what product groups you are authorised to provide financial product advice?
