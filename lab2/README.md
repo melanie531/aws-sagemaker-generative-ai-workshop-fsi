@@ -23,6 +23,24 @@ We use an Amazon Kendra index to ingest enterprise unstructured data from data s
 
 The the lab, we choose [Falcon 7B Instruct](https://huggingface.co/tiiuae/falcon-7b-instruct) LLM and deploy it on Amazon SageMaker Real-time Inference endpoint (with ml.g5.2xlarge). 
 
+### Prerequisites - Setting up IAM policies
+
+Before execute below, please ensure to attach IAM AWS Managed Policies `AmazonKendraFullAccess` to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
+
+You can follow the below instructions to add the policy to the IAM role. From the SageMaker console, search for IAM. 
+![diagram](./images/searchIAM.png)
+
+On the IAM console, search for the `SageMakerExecutionRole` as shown below:
+![diagram](./images/searchRole.png)
+
+Then click into the role and select add policies from the right handside drop down menu:
+![diagram](./images/addpolicy.png)
+
+Search for `Kendra` and add the `AmazonKendraFullAccess` policy to the IAM role and click **Add permissions**.
+![diagram](./images/kendraaccess.png)
+
+Now we are all set. Please move back to the Studio console to continue the following sections.
+
 ## Deployment Process
 
 ### Step 1. Amazon Kendra Stack Deployment
@@ -42,7 +60,7 @@ export STACK_NAME=sagemaker-llm-kendra-rag-stack
 
 * Create CloudFormation stack
 
-Before execute below, please ensure to attach IAM AWS Managed Policies (AWSCloudFormationFullAccess, IAMFullAccess, AWSLambda_FullAccess & AmazonKendraFullAccess) to the Amazon SageMaker Execution role associated with your Studio user profile. ***Please don't use similar IAM setting for your environment and always try to do IAM least-privilege setting.***
+
 
 > The cloudformation stack creation may take up to 45mins - 60mins. 
 
