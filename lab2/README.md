@@ -118,7 +118,6 @@ streamlit run solutions/chatbot-text-audio-image-kendra.py --server.port 6006 --
 ```
 
 
-
 ## Verifying new data source (Optional)
 
 To test Amazon Kendra RAG integration with LLM on new documents, please choose documents (PDF/TXT/Doc...) and upload to the S3 bucket. e.g. PDF files from [Fiancial Services Guide](https://www.commbank.com.au/content/dam/commbank/personal/apply-online/download-printed-forms/FSRA0074_BR173_PrintVersion_1811.pdf). An example pdf file is already downloaded and available in the `test` folder.
@@ -153,3 +152,7 @@ Example prompts:
 - what are the financial product advice your representatives may provide?
 - what are the means you accept special instructions from your customers about financial products and services?
 - what product groups you are authorised to provide financial product advice?
+
+
+## Automatic Prompt Engineering (APE) (Optional)
+Please refer to the `ape` folder to follow the notebook `ape.ipynb` to explore the [automatic prompt engineering solution](https://arxiv.org/pdf/2211.01910.pdf).
