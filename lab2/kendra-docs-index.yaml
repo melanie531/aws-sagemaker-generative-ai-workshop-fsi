@@ -71,6 +71,8 @@ Resources:
   ##Create the Role needed to attach the Webcrawler Data Source
   KendraDSRole:
     Type: 'AWS::IAM::Role'
+    DependsOn: 
+      - KendraDocsS3Bucket
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -95,7 +97,13 @@ Resources:
                   - 'kendra:BatchDeleteDocument'
               - Effect: Allow
                 Resource: !GetAtt 'KendraDocsS3Bucket.Arn'
-                Action: 's3:*'
+                Action: 's3:ListBucket'
+              - Effect: Allow
+                Resource: !Join
+                  - '/'
+                  - - !GetAtt 'KendraDocsS3Bucket.Arn'
+                    - '*'
+                Action: 's3:GetObject'
           PolicyName: !Join
             - ''
             - - !Ref 'AWS::StackName'
@@ -115,6 +123,8 @@ Resources:
 
   KendraDocsS3BucketDS:
     Type: 'AWS::Kendra::DataSource'
+    DependsOn: 
+      - KendraDocsS3Bucket
     Properties: 
       DataSourceConfiguration: 
         S3Configuration:
