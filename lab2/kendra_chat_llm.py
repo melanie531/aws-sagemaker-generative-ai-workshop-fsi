@@ -68,7 +68,7 @@ def build_chain():
         {context}
         Instruction: Based on the above documents, provide a detailed answer for, {question} Answer "don't know" 
         if not present in the document. 
-        Solution:"""
+        Helpful Answer:"""
     
     PROMPT = PromptTemplate(
         template=prompt_template, input_variables=["context", "question"]
