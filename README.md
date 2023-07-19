@@ -35,7 +35,7 @@ Once all the endpoints are deployed successfully, you can open a terminal in Sag
 
 ```python
 $ pip install -r requirements.txt
-$ export falcon_ep_name=<the falcon endpoint name deployed in your account>
+$ export nlp_ep_name=<the falcon endpoint name deployed in your account>
 $ export wp_ep_name=<the whisper endpoint name deployed in your account>
 $ export embed_ep_name=<the embedding endpoint name deployed in your account>
 $ streamlit run chatbot-text-audio-image.py --server.port 6006 --server.maxUploadSize 6
